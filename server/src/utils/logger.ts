@@ -1,11 +1,8 @@
-/**
- * Simple logger utility for production use
- * Provides structured logging with levels and timestamps
- */
+import { config } from '../config';
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-export interface LogEntry {
+interface LogMessage {
   level: LogLevel;
   message: string;
   timestamp: string;
@@ -19,72 +16,53 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   error: 3,
 };
 
-// Default to 'info' in production, 'debug' in development
-const currentLevel: LogLevel = (process.env.LOG_LEVEL as LogLevel) || 
-  (process.env.NODE_ENV === 'production' ? 'info' : 'debug');
-
-const shouldLog = (level: LogLevel): boolean => {
-  return LOG_LEVELS[level] >= LOG_LEVELS[currentLevel];
+const getMinLogLevel = (): number => {
+  if (config.NODE_ENV === 'test') return LOG_LEVELS.error + 1; // Silence all in tests
+  if (config.NODE_ENV === 'production') return LOG_LEVELS.info;
+  return LOG_LEVELS.debug;
 };
 
-const formatMessage = (level: LogLevel, message: string, data?: unknown): string => {
-  const timestamp = new Date().toISOString();
-  const entry: LogEntry = {
+const formatMessage = (log: LogMessage): string => {
+  const base = `[${log.timestamp}] ${log.level.toUpperCase()}: ${log.message}`;
+  if (log.data !== undefined) {
+    return `${base} ${JSON.stringify(log.data)}`;
+  }
+  return base;
+};
+
+const shouldLog = (level: LogLevel): boolean => {
+  return LOG_LEVELS[level] >= getMinLogLevel();
+};
+
+const createLog = (level: LogLevel, message: string, data?: unknown): void => {
+  if (!shouldLog(level)) return;
+
+  const log: LogMessage = {
     level,
     message,
-    timestamp,
-    ...(data !== undefined && { data }),
+    timestamp: new Date().toISOString(),
+    data,
   };
-  
-  // In production, output JSON for log aggregators
-  if (process.env.NODE_ENV === 'production') {
-    return JSON.stringify(entry);
+
+  const formatted = formatMessage(log);
+
+  switch (level) {
+    case 'error':
+      console.error(formatted);
+      break;
+    case 'warn':
+      console.warn(formatted);
+      break;
+    default:
+      console.log(formatted);
   }
-  
-  // In development, output human-readable format
-  const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
-  if (data !== undefined) {
-    return `${prefix} ${message} ${JSON.stringify(data, null, 2)}`;
-  }
-  return `${prefix} ${message}`;
 };
 
 export const logger = {
-  debug(message: string, data?: unknown): void {
-    if (shouldLog('debug')) {
-      console.debug(formatMessage('debug', message, data));
-    }
-  },
-
-  info(message: string, data?: unknown): void {
-    if (shouldLog('info')) {
-      console.info(formatMessage('info', message, data));
-    }
-  },
-
-  warn(message: string, data?: unknown): void {
-    if (shouldLog('warn')) {
-      console.warn(formatMessage('warn', message, data));
-    }
-  },
-
-  error(message: string, data?: unknown): void {
-    if (shouldLog('error')) {
-      console.error(formatMessage('error', message, data));
-    }
-  },
-
-  // Log HTTP requests
-  http(method: string, path: string, statusCode: number, duration: number): void {
-    const message = `${method} ${path} ${statusCode} ${duration}ms`;
-    if (statusCode >= 500) {
-      this.error(message);
-    } else if (statusCode >= 400) {
-      this.warn(message);
-    } else {
-      this.info(message);
-    }
-  },
+  debug: (message: string, data?: unknown): void => createLog('debug', message, data),
+  info: (message: string, data?: unknown): void => createLog('info', message, data),
+  warn: (message: string, data?: unknown): void => createLog('warn', message, data),
+  error: (message: string, data?: unknown): void => createLog('error', message, data),
 };
 
 export default logger;

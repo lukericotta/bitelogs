@@ -1,26 +1,17 @@
 import bcrypt from 'bcryptjs';
 import { createPool } from '../db';
-import { logger } from '../utils/logger';
 
 const SALT_ROUNDS = 12;
-
-// Demo password that meets complexity requirements:
-// - 8+ characters
-// - Uppercase (D)
-// - Lowercase (emo)
-// - Number (123)
-// - Special character (!@#)
-const DEMO_PASSWORD = 'Demo123!@#';
 
 export const runSeed = async (): Promise<void> => {
   const pool = createPool();
   const client = await pool.connect();
 
   try {
-    logger.info('Seeding database...');
+    console.log('Seeding database...');
 
     // Create demo users
-    const passwordHash = await bcrypt.hash(DEMO_PASSWORD, SALT_ROUNDS);
+    const passwordHash = await bcrypt.hash('password123', SALT_ROUNDS);
     
     const usersResult = await client.query<{ id: number }>(
       `INSERT INTO users (email, password_hash, display_name, is_admin)
@@ -114,8 +105,8 @@ export const runSeed = async (): Promise<void> => {
       );
     }
 
-    logger.info('Seed completed successfully');
-    logger.info(`Demo credentials: demo@example.com / ${DEMO_PASSWORD}`);
+    console.log('Seed completed successfully');
+    console.log('Demo credentials: demo@example.com / password123');
   } finally {
     client.release();
     await pool.end();
@@ -127,7 +118,7 @@ if (require.main === module) {
   runSeed()
     .then(() => process.exit(0))
     .catch((err) => {
-      logger.error('Seed failed:', err);
+      console.error('Seed failed:', err);
       process.exit(1);
     });
 }

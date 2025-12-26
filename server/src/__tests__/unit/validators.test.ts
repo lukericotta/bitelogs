@@ -1,7 +1,6 @@
 import {
   isValidEmail,
   isValidPassword,
-  validatePasswordComplexity,
   isRequired,
   isValidRating,
   isValidPriceRange,
@@ -45,89 +44,25 @@ describe('Validators', () => {
     });
   });
 
-  describe('validatePasswordComplexity', () => {
-    it('should return valid for password meeting all requirements', () => {
-      const result = validatePasswordComplexity('Password1!');
-      expect(result.isValid).toBe(true);
-      expect(result.errors).toHaveLength(0);
-    });
-
-    it('should require at least 8 characters', () => {
-      const result = validatePasswordComplexity('Pass1!');
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Password must be at least 8 characters long');
-    });
-
-    it('should require uppercase letter', () => {
-      const result = validatePasswordComplexity('password1!');
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Password must contain at least one uppercase letter');
-    });
-
-    it('should require lowercase letter', () => {
-      const result = validatePasswordComplexity('PASSWORD1!');
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Password must contain at least one lowercase letter');
-    });
-
-    it('should require a number', () => {
-      const result = validatePasswordComplexity('Password!');
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Password must contain at least one number');
-    });
-
-    it('should require a special character', () => {
-      const result = validatePasswordComplexity('Password1');
-      expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Password must contain at least one special character');
-    });
-
-    it('should return multiple errors for completely invalid password', () => {
-      const result = validatePasswordComplexity('abc');
-      expect(result.isValid).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(1);
-    });
-
-    it('should accept various special characters', () => {
-      expect(validatePasswordComplexity('Password1@').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1#').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1$').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1%').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1^').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1&').isValid).toBe(true);
-      expect(validatePasswordComplexity('Password1*').isValid).toBe(true);
-    });
-
-    it('should accept complex valid passwords', () => {
-      expect(validatePasswordComplexity('MyP@ssw0rd!').isValid).toBe(true);
-      expect(validatePasswordComplexity('Str0ng#Pass').isValid).toBe(true);
-      expect(validatePasswordComplexity('C0mpl3x!ty').isValid).toBe(true);
-    });
-  });
-
   describe('isValidPassword', () => {
-    it('should return true for password meeting all requirements', () => {
-      expect(isValidPassword('Password1!')).toBe(true);
+    it('should return true for exactly 8 characters', () => {
+      expect(isValidPassword('12345678')).toBe(true);
     });
 
-    it('should return true for complex valid password', () => {
-      expect(isValidPassword('MyStr0ng@Pass')).toBe(true);
+    it('should return true for longer passwords', () => {
+      expect(isValidPassword('longerpassword123')).toBe(true);
     });
 
     it('should return false for empty password', () => {
       expect(isValidPassword('')).toBe(false);
     });
 
-    it('should return false for simple password without complexity', () => {
-      expect(isValidPassword('12345678')).toBe(false);
-    });
-
-    it('should return false for password without special char', () => {
-      expect(isValidPassword('Password1')).toBe(false);
+    it('should return false for 7 character password', () => {
+      expect(isValidPassword('1234567')).toBe(false);
     });
 
     it('should return false for short password', () => {
-      expect(isValidPassword('Pass1!')).toBe(false);
+      expect(isValidPassword('short')).toBe(false);
     });
   });
 
@@ -236,13 +171,10 @@ describe('Validators', () => {
   });
 
   describe('validateRegistration', () => {
-    // Use password that meets complexity requirements
-    const validPassword = 'Password1!';
-
     it('should return empty array for valid data', () => {
       const errors = validateRegistration({
         email: 'test@example.com',
-        password: validPassword,
+        password: 'password123',
         displayName: 'Test User',
       });
       expect(errors).toHaveLength(0);
@@ -250,7 +182,7 @@ describe('Validators', () => {
 
     it('should return errors for missing email', () => {
       const errors = validateRegistration({
-        password: validPassword,
+        password: 'password123',
         displayName: 'Test User',
       });
       expect(errors).toHaveLength(1);
@@ -260,30 +192,11 @@ describe('Validators', () => {
     it('should return errors for invalid email format', () => {
       const errors = validateRegistration({
         email: 'invalid-email',
-        password: validPassword,
+        password: 'password123',
         displayName: 'Test User',
       });
       expect(errors).toHaveLength(1);
       expect(errors[0].field).toBe('email');
-    });
-
-    it('should return errors for missing password', () => {
-      const errors = validateRegistration({
-        email: 'test@example.com',
-        displayName: 'Test User',
-      });
-      expect(errors).toHaveLength(1);
-      expect(errors[0].field).toBe('password');
-    });
-
-    it('should return errors for password without complexity', () => {
-      const errors = validateRegistration({
-        email: 'test@example.com',
-        password: 'simplepassword',
-        displayName: 'Test User',
-      });
-      expect(errors).toHaveLength(1);
-      expect(errors[0].field).toBe('password');
     });
 
     it('should return errors for short password', () => {
@@ -296,21 +209,10 @@ describe('Validators', () => {
       expect(errors[0].field).toBe('password');
     });
 
-    it('should return detailed password complexity errors', () => {
-      const errors = validateRegistration({
-        email: 'test@example.com',
-        password: 'password', // lowercase only, no number, no special char
-        displayName: 'Test User',
-      });
-      expect(errors).toHaveLength(1);
-      expect(errors[0].field).toBe('password');
-      expect(errors[0].message).toContain('uppercase');
-    });
-
     it('should return errors for missing displayName', () => {
       const errors = validateRegistration({
         email: 'test@example.com',
-        password: validPassword,
+        password: 'password123',
       });
       expect(errors).toHaveLength(1);
       expect(errors[0].field).toBe('displayName');

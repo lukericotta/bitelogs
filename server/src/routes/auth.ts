@@ -2,9 +2,9 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import { UserModel } from '../models/User';
 import { generateToken } from '../utils/jwt';
-import { validateRegistration, sanitizeString } from '../utils/validators';
+import { validateRegistration, sanitizeString, validatePasswordStrength } from '../utils/validators';
 import { ValidationError, ConflictError, UnauthorizedError } from '../utils/errors';
-import { authenticate } from '../middleware/auth';
+import { authenticate, authLimiter, registrationLimiter } from '../middleware';
 
 const router = Router();
 let userModel: UserModel;
@@ -14,14 +14,22 @@ export const initAuthRoutes = (pool: Pool): Router => {
   return router;
 };
 
-// POST /api/auth/register
-router.post('/register', async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/auth/register - with registration rate limiting
+router.post('/register', registrationLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password, displayName } = req.body;
 
     const errors = validateRegistration({ email, password, displayName });
     if (errors.length > 0) {
       throw new ValidationError('Validation failed', errors);
+    }
+
+    // Check password strength
+    const passwordStrength = validatePasswordStrength(password);
+    if (!passwordStrength.isValid) {
+      throw new ValidationError('Password is too weak', 
+        passwordStrength.feedback.map(msg => ({ field: 'password', message: msg }))
+      );
     }
 
     const existingUser = await userModel.findByEmail(email);
@@ -47,8 +55,8 @@ router.post('/register', async (req: Request, res: Response, next: NextFunction)
   }
 });
 
-// POST /api/auth/login
-router.post('/login', async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/auth/login - with auth rate limiting
+router.post('/login', authLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
 

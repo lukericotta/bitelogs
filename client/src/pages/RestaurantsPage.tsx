@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Restaurant } from '@bitelogs/shared';
 // FIX: Corrected import paths
@@ -50,7 +50,7 @@ const RestaurantsPage = () => {
             type="text"
             placeholder="Search restaurants..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
             className="input-field w-64"
           />
           <Link to="/restaurants/add" className="btn-primary">
@@ -70,7 +70,7 @@ const RestaurantsPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {restaurants.map((restaurant) => (
+          {restaurants.map((restaurant: Restaurant) => (
             <Link
               key={restaurant.id}
               to={`/restaurants/${restaurant.id}`}

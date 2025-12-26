@@ -2,7 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
 import { ReviewModel } from '../models/Review';
 import { MenuItemModel } from '../models/MenuItem';
-import { authenticate } from '../middleware/auth';
+import { authenticate, reviewLimiter } from '../middleware';
 import { upload, processImage, saveImageLocally } from '../middleware/upload';
 import { ValidationError, NotFoundError, ForbiddenError } from '../utils/errors';
 import { validateReview } from '../utils/validators';
@@ -17,8 +17,8 @@ export const initReviewRoutes = (pool: Pool): Router => {
   return router;
 };
 
-// POST /api/reviews
-router.post('/', authenticate, async (req: Request, res: Response, next: NextFunction) => {
+// POST /api/reviews - with review rate limiting
+router.post('/', authenticate, reviewLimiter, async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { menuItemId, rating, comment } = req.body;
 

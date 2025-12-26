@@ -7,10 +7,16 @@
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run dev -w @bitelogs/server",
     "dev:client": "npm run dev -w @bitelogs/client",
-    "build": "npm run build -w @bitelogs/server && npm run build -w @bitelogs/client",
+    "build": "npm run build -w @bitelogs/shared && npm run build -w @bitelogs/server && npm run build -w @bitelogs/client",
+    "build:server": "npm run build -w @bitelogs/server",
+    "build:client": "npm run build -w @bitelogs/client",
+    "start": "npm run start -w @bitelogs/server",
     "test": "npm run test -w @bitelogs/server",
     "test:unit": "npm run test:unit -w @bitelogs/server",
-    "typecheck": "npm run typecheck -w @bitelogs/shared && npm run typecheck -w @bitelogs/server && npm run typecheck -w @bitelogs/client"
+    "typecheck": "npm run typecheck -w @bitelogs/shared && npm run typecheck -w @bitelogs/server && npm run typecheck -w @bitelogs/client",
+    "migrate": "npm run migrate -w @bitelogs/server",
+    "seed": "npm run seed -w @bitelogs/server",
+    "postinstall": "echo 'Dependencies installed'"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

@@ -1,6 +1,5 @@
 import { Pool } from 'pg';
 import { createPool } from '../db';
-import { logger } from '../utils/logger';
 
 const migrations = [
   // Users table
@@ -77,13 +76,13 @@ export const runMigrations = async (pool?: Pool): Promise<void> => {
   const client = await db.connect();
 
   try {
-    logger.info('Running migrations...');
+    console.log('Running migrations...');
 
     for (const migration of migrations) {
       await client.query(migration);
     }
 
-    logger.info('Migrations completed successfully');
+    console.log('Migrations completed successfully');
   } finally {
     client.release();
     if (!pool) {
@@ -97,7 +96,7 @@ if (require.main === module) {
   runMigrations()
     .then(() => process.exit(0))
     .catch((err) => {
-      logger.error('Migration failed:', err);
+      console.error('Migration failed:', err);
       process.exit(1);
     });
 }
