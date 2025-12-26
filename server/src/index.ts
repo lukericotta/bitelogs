@@ -64,8 +64,10 @@ const startServer = async (): Promise<void> => {
     await pool.query('SELECT 1');
     logger.info('Database connected');
 
-    app.listen(config.PORT, () => {
-      logger.info(`Server running on port ${config.PORT}`);
+    // Bind to 0.0.0.0 for cloud deployments (Render, etc.)
+    const host = '0.0.0.0';
+    app.listen(config.PORT, host, () => {
+      logger.info(`Server running on ${host}:${config.PORT}`);
       logger.info(`Environment: ${config.NODE_ENV}`);
     });
   } catch (error) {
