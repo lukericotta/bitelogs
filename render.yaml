@@ -1,0 +1,26 @@
+# Render Blueprint - https://render.com/docs/blueprint-spec
+# Deploy with: Connect GitHub repo → Render auto-detects this file
+
+services:
+  # Combined API + Static Frontend
+  - type: web
+    name: bitelogs
+    runtime: node
+    plan: free
+    buildCommand: |
+      cd client && npm install && npm run build &&
+      cd ../server && npm install && npm run build
+    startCommand: node server/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        sync: false  # Set manually (Supabase connection string)
+      - key: JWT_SECRET
+        generateValue: true  # Auto-generate secure random string
+      - key: LOG_LEVEL
+        value: info
+    healthCheckPath: /api/health
+    autoDeploy: true

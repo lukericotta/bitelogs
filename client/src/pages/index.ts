@@ -1,0 +1,11 @@
+export { default as HomePage } from './HomePage';
+export { default as LoginPage } from './LoginPage';
+export { default as RegisterPage } from './RegisterPage';
+export { default as RestaurantsPage } from './RestaurantsPage';
+export { default as RestaurantDetailPage } from './RestaurantDetailPage';
+export { default as MenuItemDetailPage } from './MenuItemDetailPage';
+export { default as DiscoverPage } from './DiscoverPage';
+export { default as ProfilePage } from './ProfilePage';
+export { default as AddRestaurantPage } from './AddRestaurantPage';
+export { default as AddMenuItemPage } from './AddMenuItemPage';
+export { default as NotFoundPage } from './NotFoundPage';
