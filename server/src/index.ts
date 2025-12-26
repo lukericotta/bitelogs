@@ -19,8 +19,18 @@ const pool = createPool();
 // Security middleware
 app.use(securityHeaders());
 
-// General middleware
-app.use(cors());
+// CORS configuration - allow all origins for API
+const corsOptions = {
+  origin: true, // Allow all origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use('/uploads', express.static(config.UPLOAD_DIR));
 
@@ -28,6 +38,15 @@ app.use('/uploads', express.static(config.UPLOAD_DIR));
 app.use('/api', apiLimiter);
 
 // Routes
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'BiteLogs API', 
+    version: '1.0.0',
+    health: '/api/health',
+    docs: 'See /api/health for status'
+  });
+});
+
 app.use('/api', initHealthRoutes(pool));
 app.use('/api/auth', initAuthRoutes(pool));
 app.use('/api/restaurants', initRestaurantRoutes(pool));
